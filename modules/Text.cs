@@ -1,5 +1,4 @@
 using SDL2;
-using System;
 
 public static class Text
 {
@@ -11,11 +10,17 @@ public static class Text
     defaultFont = SDL_ttf.TTF_OpenFont(defaultFontPath, 24);
     if (defaultFont == IntPtr.Zero)
     {
-      Console.WriteLine($"Error loading default font: {SDL.SDL_GetError()}");
+      Console.WriteLine($"Error loading default font");
     }
   }
 
   public static void Render(IntPtr renderer, IntPtr font, string message, string colorName, int x, int y, int? fontSize = null)
+  {
+    SDL.SDL_Color color = Color.GetColor(colorName);
+    Render(renderer, font, message, color, x, y, fontSize);
+  }
+
+  public static void Render(IntPtr renderer, IntPtr font, string message, SDL.SDL_Color color, int x, int y, int? fontSize = null)
   {
     if (font == IntPtr.Zero)
     {
@@ -27,24 +32,22 @@ public static class Text
       font = SDL_ttf.TTF_OpenFont(defaultFontPath, fontSize.Value);
       if (font == IntPtr.Zero)
       {
-        Console.WriteLine($"Error loading font with size {fontSize.Value}: {SDL.SDL_GetError()}");
+        Console.WriteLine($"Error loading font with size");
         return;
       }
     }
 
-    SDL.SDL_Color color = Color.GetColor(colorName);
-
     IntPtr surface = SDL_ttf.TTF_RenderText_Solid(font, message, color);
     if (surface == IntPtr.Zero)
     {
-      Console.WriteLine($"Error creating text surface: {SDL.SDL_GetError()}");
+      Console.WriteLine($"Error creating text surface");
       return;
     }
 
     IntPtr texture = SDL.SDL_CreateTextureFromSurface(renderer, surface);
     if (texture == IntPtr.Zero)
     {
-      Console.WriteLine($"Error creating texture: {SDL.SDL_GetError()}");
+      Console.WriteLine($"Error creating texture");
       SDL.SDL_FreeSurface(surface);
       return;
     }
@@ -64,7 +67,6 @@ public static class Text
     }
   }
 
-  // Destructor for cleanup
   public static void Cleanup()
   {
     if (defaultFont != IntPtr.Zero)

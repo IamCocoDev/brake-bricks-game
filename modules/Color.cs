@@ -1,7 +1,4 @@
 using SDL2;
-using System;
-using System.Collections.Generic;
-
 public static class Color
 {
   private static readonly Dictionary<string, SDL.SDL_Color> Colors = new Dictionary<string, SDL.SDL_Color>
@@ -33,15 +30,11 @@ public static class Color
     {
       return color;
     }
-
-    // Default to black if color name is not found
-    Console.WriteLine($"Color '{colorName}' not found. Defaulting to black.");
     return Colors["black"];
   }
 
   public static SDL.SDL_Color GetRandomColor(string[] excludedColors)
   {
-    // Obtener una lista de valores de colores excluyendo los colores especificados en excludedColors
     List<SDL.SDL_Color> colorValues = new List<SDL.SDL_Color>(Colors.Values);
     foreach (var excludedColor in excludedColors)
     {

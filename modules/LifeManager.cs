@@ -3,7 +3,7 @@ public class LifeManager
   private int lives;
   public int Lives => lives;
 
-  public LifeManager(int initialLives = 10)
+  public LifeManager(int initialLives = 3)
   {
     lives = initialLives;
   }
@@ -13,17 +13,11 @@ public class LifeManager
     if (lives > 0)
     {
       lives--;
-      Console.WriteLine($"Life lost! Remaining lives: {lives}");
-    }
-    else
-    {
-      Console.WriteLine("No lives left!");
-      // game state to game over
     }
   }
   public bool IsGameOver()
   {
-    return lives < 0;
+    return lives <= 0;
   }
 
   public int GetLives()

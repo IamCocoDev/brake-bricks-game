@@ -6,15 +6,17 @@ public class PerkManager
   private int perkThreshold;
   private List<Ball> balls;
   private LifeManager lifeManager;
+  private ScoreManager scoreManager;
   private bool perkActive;
 
-  public PerkManager(Paddle paddle, IntPtr renderer, List<Ball> balls, LifeManager lifeManager, int perkThreshold = 3)
+  public PerkManager(Paddle paddle, IntPtr renderer, List<Ball> balls, LifeManager lifeManager, ScoreManager scoreManager, int perkThreshold = 3)
   {
     this.paddle = paddle;
     this.renderer = renderer;
     this.balls = balls;
     this.lifeManager = lifeManager;
     this.perkThreshold = perkThreshold;
+    this.scoreManager = scoreManager;
     consecutiveBlocksDestroyed = 0;
     perkActive = false;
   }
@@ -45,7 +47,7 @@ public class PerkManager
     int ballsToCreate = Math.Min(1, 2 - GetActiveGrayscaleBallCount());
     for (int i = 0; i < ballsToCreate; i++)
     {
-      var newBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: false, lifeManager);
+      var newBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: false, lifeManager, scoreManager);
       newBall.Launch(paddle);
       balls.Add(newBall);
     }

@@ -11,16 +11,18 @@ public class GameScreen : BaseScreen
   private PerkManager perkManager;
 
   private LifeManager lifeManager;
+  private ScoreManager scoreManager;
 
   public GameScreen(IntPtr renderer) : base(renderer)
   {
     background = new Background(renderer);
     lifeManager = new LifeManager();
+    scoreManager = new ScoreManager();
     paddle = new Paddle(renderer, (ScreenSize.Width / 2) - 50, ScreenSize.Height - 30);
-    var initialBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: true, lifeManager);
+    var initialBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: true, lifeManager, scoreManager);
     balls.Add(initialBall);
 
-    perkManager = new PerkManager(paddle, renderer, balls, lifeManager);
+    perkManager = new PerkManager(paddle, renderer, balls, lifeManager, scoreManager);
 
     levels = LevelLoader.LoadLevels("./assets/levels/levels.json");
 
@@ -34,12 +36,13 @@ public class GameScreen : BaseScreen
     }
   }
 
-  // Rendering of the game screen
   public override void Render()
   {
     background.Render();
     paddle.Render();
     lifeManager.Render(renderer);
+    scoreManager.Render(renderer);
+
 
     foreach (var ball in balls)
     {
@@ -52,7 +55,6 @@ public class GameScreen : BaseScreen
     }
   }
 
-  // Control of the paddle
   public override void HandleInput(object e)
   {
     var sdlEvent = (SDL.SDL_Event)e;
@@ -60,7 +62,6 @@ public class GameScreen : BaseScreen
     {
       if (sdlEvent.key.keysym.sym == SDL.SDL_Keycode.SDLK_SPACE)
       {
-        // Buscar la bola roja en el arreglo
         var redBall = balls.Find(ball => ball.IsOriginal);
         if (redBall != null && !redBall.InPlay)
         {
@@ -70,7 +71,6 @@ public class GameScreen : BaseScreen
     }
   }
 
-  // Update of the game state
   public override void Update()
   {
     paddle.Update();
@@ -84,44 +84,17 @@ public class GameScreen : BaseScreen
     for (int i = balls.Count - 1; i >= 0; i--)
     {
       var ball = balls[i];
-      ball.Update(paddle);
-
-      // Si la bola ya no está en juego, la eliminamos del arreglo
+      ball.Update(paddle, blocks, perkManager, scoreManager, lifeManager);
       if (!ball.InPlay)
       {
         if (ball.IsOriginal)
         {
-          // La vida ya se descontó en Ball.Update(), solo creamos una nueva bola roja
-          var newBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: true, lifeManager);
+          var newBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: true, lifeManager, scoreManager);
           balls.Add(newBall);
           perkManager.ResetConsecutiveBlocks();
         }
-        // Removemos la bola del arreglo
         balls.RemoveAt(i);
-        continue; // Saltamos al siguiente ciclo ya que esta bola ya no existe
-      }
-
-      // Colisión con la pala
-      if (ball.HandleCollisionWithPaddle(paddle))
-      {
-        perkManager.ResetConsecutiveBlocks();
-      }
-
-      // Colisiones con bloques
-      for (int j = blocks.Count - 1; j >= 0; j--)
-      {
-        var block = blocks[j];
-        if (block.IsVisible &&
-            ball.Rect.x + ball.Rect.w > block.Rect.x && ball.Rect.x < block.Rect.x + block.Rect.w &&
-            ball.Rect.y + ball.Rect.h > block.Rect.y && ball.Rect.y < block.Rect.y + block.Rect.h)
-        {
-          block.IsVisible = false;
-          blocks.RemoveAt(j);
-          ball.ReverseVerticalDirection();
-
-          perkManager.BlockDestroyed(ball.IsOriginal);
-          break;
-        }
+        continue;
       }
     }
 
@@ -131,7 +104,6 @@ public class GameScreen : BaseScreen
     }
   }
 
-  // Advance to the next level
   private void AdvanceToNextLevel()
   {
     currentLevelIndex++;
@@ -139,12 +111,17 @@ public class GameScreen : BaseScreen
     {
       blocks = BlockTemplateLoader.LoadBlocksFromTemplate(levels[currentLevelIndex], ScreenSize.Width, ScreenSize.Height);
       balls.Clear();
-      var newBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: true, lifeManager);
+      var newBall = new Ball(renderer, paddle.Rect.x + (paddle.Rect.w / 2) - 5, paddle.Rect.y - 10, isOriginal: true, lifeManager, scoreManager);
       balls.Add(newBall);
     }
     else
     {
-      Console.WriteLine("You completed all levels!");
+      NextState = GameState.Victory;
     }
+  }
+
+  public int GetCurrentScore()
+  {
+    return scoreManager.Score;
   }
 }

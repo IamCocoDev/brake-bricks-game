@@ -6,7 +6,9 @@ public enum GameState
     StartScreen,
     Playing,
     GameOver,
-    Closing
+    Closing,
+    Credits,
+    Victory
 }
 
 public static class ScreenSize
@@ -35,6 +37,8 @@ class Program
 
         bool running = true;
 
+        int finalScore = 0;
+
         while (running)
         {
             while (SDL.SDL_PollEvent(out SDL.SDL_Event e) == 1)
@@ -48,7 +52,7 @@ class Program
 
                 if (currentScreen.NextState != currentState)
                 {
-                    Console.WriteLine($"Transitioning to state: {currentScreen.NextState}");
+                    finalScore = (currentScreen as GameScreen)?.GetCurrentScore() ?? 0;
                     currentState = currentScreen.NextState;
 
                     switch (currentState)
@@ -62,11 +66,19 @@ class Program
                             currentScreen.Initialize();
                             break;
                         case GameState.GameOver:
-                            currentScreen = new GameOverScreen(renderer, 0, false);
+                            currentScreen = new GameOverScreen(renderer, finalScore, false);
                             currentScreen.Initialize();
                             break;
                         case GameState.Closing:
                             running = false;
+                            break;
+                        case GameState.Victory:
+                            currentScreen = new GameOverScreen(renderer, finalScore, true);
+                            currentScreen.Initialize();
+                            break;
+                        case GameState.Credits:
+                            currentScreen = new CreditScreen(renderer);
+                            currentScreen.Initialize();
                             break;
                     }
 
